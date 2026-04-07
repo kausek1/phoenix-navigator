@@ -60,7 +60,7 @@ const WSJFScatterChart = ({ data }: Props) => {
           <ReLabel value="Estimated Cost" angle={-90} position="insideLeft" style={{ textAnchor: "middle" }} />
         </YAxis>
         <Tooltip content={<CustomTooltip />} />
-        <Scatter data={chartData} nameKey="label">
+        <Scatter data={chartData} name="Interventions">
           {chartData.map((entry, idx) => (
             <Cell
               key={idx}
