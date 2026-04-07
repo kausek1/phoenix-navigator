@@ -4,15 +4,30 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Flame } from "lucide-react";
+import { toast } from "sonner";
 
 const LoginPage = () => {
-  const { login } = useAuth();
+  const { login, signup } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    login(email, password);
+    setLoading(true);
+
+    const { error } = isSignUp
+      ? await signup(email, password)
+      : await login(email, password);
+
+    setLoading(false);
+
+    if (error) {
+      toast.error(error);
+    } else if (isSignUp) {
+      toast.success("Check your email to confirm your account.");
+    }
   };
 
   return (
@@ -23,7 +38,9 @@ const LoginPage = () => {
             <Flame className="h-7 w-7 text-primary-foreground" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">PHOENIX</h1>
-          <p className="text-sm text-muted-foreground mt-1">Sign in to continue</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {isSignUp ? "Create your account" : "Sign in to continue"}
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -49,18 +66,28 @@ const LoginPage = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              minLength={6}
               className="bg-secondary border-border focus:ring-primary"
             />
           </div>
 
-          <Button type="submit" className="w-full gradient-phoenix text-primary-foreground font-semibold shadow-glow hover:opacity-90 transition-opacity">
-            Sign In
+          <Button
+            type="submit"
+            disabled={loading}
+            className="w-full gradient-phoenix text-primary-foreground font-semibold shadow-glow hover:opacity-90 transition-opacity"
+          >
+            {loading ? "Loading..." : isSignUp ? "Create Account" : "Sign In"}
           </Button>
         </form>
 
         <p className="text-center text-xs text-muted-foreground mt-6">
-          Don't have an account?{" "}
-          <span className="text-primary cursor-pointer hover:underline">Sign up</span>
+          {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
+          <button
+            onClick={() => setIsSignUp(!isSignUp)}
+            className="text-primary hover:underline"
+          >
+            {isSignUp ? "Sign in" : "Sign up"}
+          </button>
         </p>
       </div>
     </div>

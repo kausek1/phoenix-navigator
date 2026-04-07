@@ -28,7 +28,7 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
@@ -65,6 +65,9 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-2">
+        {!collapsed && user?.email && (
+          <p className="text-xs text-muted-foreground px-2 mb-1 truncate">{user.email}</p>
+        )}
         <Button
           variant="ghost"
           className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/50"
