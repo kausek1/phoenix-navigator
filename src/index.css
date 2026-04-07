@@ -6,47 +6,50 @@
 
 @layer base {
   :root {
-    --background: 220 20% 7%;
-    --foreground: 40 10% 92%;
+    --background: 210 40% 98%;
+    --foreground: 210 29% 24%;
 
-    --card: 220 18% 10%;
-    --card-foreground: 40 10% 92%;
+    --card: 0 0% 100%;
+    --card-foreground: 210 29% 24%;
 
-    --popover: 220 18% 10%;
-    --popover-foreground: 40 10% 92%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 29% 24%;
 
-    --primary: 35 95% 55%;
-    --primary-foreground: 220 20% 7%;
+    --primary: 204 62% 28%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 16% 14%;
-    --secondary-foreground: 40 10% 85%;
+    --secondary: 214 32% 91%;
+    --secondary-foreground: 210 29% 24%;
 
-    --muted: 220 14% 16%;
-    --muted-foreground: 220 10% 55%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 25 90% 48%;
-    --accent-foreground: 40 10% 95%;
+    --accent: 166 79% 27%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 14% 18%;
-    --input: 220 14% 18%;
-    --ring: 35 95% 55%;
+    --warning: 38 92% 44%;
+    --warning-foreground: 0 0% 100%;
 
-    --radius: 0.625rem;
+    --success: 142 72% 37%;
+    --success-foreground: 0 0% 100%;
 
-    --sidebar-background: 220 20% 8%;
-    --sidebar-foreground: 220 10% 65%;
-    --sidebar-primary: 35 95% 55%;
-    --sidebar-primary-foreground: 220 20% 7%;
-    --sidebar-accent: 220 16% 14%;
-    --sidebar-accent-foreground: 40 10% 92%;
-    --sidebar-border: 220 14% 15%;
-    --sidebar-ring: 35 95% 55%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 166 79% 27%;
 
-    --gradient-phoenix: linear-gradient(135deg, hsl(35 95% 55%), hsl(15 90% 50%));
-    --shadow-glow: 0 0 30px -5px hsl(35 95% 55% / 0.2);
+    --radius: 0.5rem;
+
+    --sidebar-background: 204 62% 28%;
+    --sidebar-foreground: 204 30% 85%;
+    --sidebar-primary: 166 79% 27%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 204 62% 22%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 204 62% 24%;
+    --sidebar-ring: 166 79% 27%;
   }
 }
 
@@ -63,9 +66,9 @@
 
 @layer utilities {
   .gradient-phoenix {
-    background: var(--gradient-phoenix);
+    background: linear-gradient(135deg, hsl(204 62% 28%), hsl(166 79% 27%));
   }
   .shadow-glow {
-    box-shadow: var(--shadow-glow);
+    box-shadow: 0 0 30px -5px hsl(166 79% 27% / 0.2);
   }
 }
