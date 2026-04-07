@@ -11,7 +11,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import SlideOverPanel from "@/components/SlideOverPanel";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import { Plus, Pencil, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import ScoreBar from "@/components/wsjf/ScoreBar";
+import WSJFScatterChart from "@/components/wsjf/WSJFScatterChart";
+import BulkScoreTable from "@/components/wsjf/BulkScoreTable";
+import LinkedAssets from "@/components/wsjf/LinkedAssets";
+import { Plus, Pencil, Trash2, ChevronDown, ChevronUp, BarChart3, TableIcon, Zap, X } from "lucide-react";
 
 const FIBONACCI = ["1", "2", "3", "5", "8", "10", "13"];
 
@@ -24,6 +28,8 @@ const stageBadgeColors: Record<string, string> = {
   verified: "bg-success text-success-foreground",
 };
 
+type ViewMode = "table" | "chart" | "bulk";
+
 const WSJFScoring = () => {
   const { clientId, canEdit, canDelete } = useAuth();
   const [interventions, setInterventions] = useState<any[]>([]);
@@ -35,6 +41,7 @@ const WSJFScoring = () => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [form, setForm] = useState<Record<string, any>>({});
+  const [viewMode, setViewMode] = useState<ViewMode>("table");
 
   const fetchAll = useCallback(async () => {
     if (!clientId) return;
@@ -54,15 +61,14 @@ const WSJFScoring = () => {
 
   const calcWSJF = (r: any) => {
     const cost = (Number(r.business_roi) || 0) + (Number(r.planet_impact) || 0) + (Number(r.people_impact) || 0);
-    const ttd = Number(r.time_to_deploy) || 1;
-    return cost / ttd;
+    return cost / (Number(r.time_to_deploy) || 1);
   };
 
   const sorted = [...interventions].sort((a, b) => calcWSJF(b) - calcWSJF(a));
+  const maxWSJF = sorted.length > 0 ? calcWSJF(sorted[0]) : 1;
 
   const handleScoreChange = async (id: string, field: string, value: string) => {
     const numVal = parseInt(value);
-    // Optimistic update
     setInterventions((prev) => prev.map((r) => r.id === id ? { ...r, [field]: numVal } : r));
     await supabase.from("interventions").update({ [field]: numVal }).eq("id", id);
   };
@@ -94,91 +100,123 @@ const WSJFScoring = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-primary">WSJF Scoring</h1>
-        {canEdit && <Button size="sm" onClick={openAdd}><Plus className="h-4 w-4 mr-1" />Add Intervention</Button>}
+        <div className="flex gap-2">
+          {canEdit && viewMode !== "bulk" && (
+            <Button size="sm" variant="outline" onClick={() => setViewMode("bulk")}>
+              <Zap className="h-4 w-4 mr-1" />Quick Score
+            </Button>
+          )}
+          {viewMode === "bulk" && (
+            <Button size="sm" variant="outline" onClick={() => setViewMode("table")}>
+              <X className="h-4 w-4 mr-1" />Exit Quick Score
+            </Button>
+          )}
+          {viewMode !== "bulk" && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setViewMode(viewMode === "table" ? "chart" : "table")}
+            >
+              {viewMode === "table" ? <><BarChart3 className="h-4 w-4 mr-1" />Chart View</> : <><TableIcon className="h-4 w-4 mr-1" />Table View</>}
+            </Button>
+          )}
+          {canEdit && <Button size="sm" onClick={openAdd}><Plus className="h-4 w-4 mr-1" />Add Intervention</Button>}
+        </div>
       </div>
 
       <Card>
         <CardContent className="pt-6 overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">Rank</TableHead>
-                <TableHead>Title</TableHead>
-                <TableHead>Business ROI</TableHead>
-                <TableHead>Planet Impact</TableHead>
-                <TableHead>People Impact</TableHead>
-                <TableHead>Time to Deploy</TableHead>
-                <TableHead>WSJF Score</TableHead>
-                <TableHead>Stage</TableHead>
-                <TableHead>Owner</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sorted.map((r, i) => (
-                <>
-                  <TableRow key={r.id} className="cursor-pointer" onClick={() => setExpandedId(expandedId === r.id ? null : r.id)}>
-                    <TableCell className="font-bold text-primary">{i + 1}</TableCell>
-                    <TableCell className="font-medium flex items-center gap-1">
-                      {r.title}
-                      {expandedId === r.id ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                    </TableCell>
-                    <TableCell onClick={(e) => e.stopPropagation()}>
-                      <Select value={String(r.business_roi || 1)} onValueChange={(v) => handleScoreChange(r.id, "business_roi", v)}>
-                        <SelectTrigger className="w-16 h-8"><SelectValue /></SelectTrigger>
-                        <SelectContent>{FIBONACCI.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell onClick={(e) => e.stopPropagation()}>
-                      <Select value={String(r.planet_impact || 1)} onValueChange={(v) => handleScoreChange(r.id, "planet_impact", v)}>
-                        <SelectTrigger className="w-16 h-8"><SelectValue /></SelectTrigger>
-                        <SelectContent>{FIBONACCI.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell onClick={(e) => e.stopPropagation()}>
-                      <Select value={String(r.people_impact || 1)} onValueChange={(v) => handleScoreChange(r.id, "people_impact", v)}>
-                        <SelectTrigger className="w-16 h-8"><SelectValue /></SelectTrigger>
-                        <SelectContent>{FIBONACCI.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell onClick={(e) => e.stopPropagation()}>
-                      <Select value={String(r.time_to_deploy || 1)} onValueChange={(v) => handleScoreChange(r.id, "time_to_deploy", v)}>
-                        <SelectTrigger className="w-16 h-8"><SelectValue /></SelectTrigger>
-                        <SelectContent>{FIBONACCI.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className="bg-primary text-primary-foreground">{calcWSJF(r).toFixed(2)}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={stageBadgeColors[r.stage] || "bg-muted"}>{r.stage?.replace("_", " ") || "—"}</Badge>
-                    </TableCell>
-                    <TableCell>{profiles.find((p) => p.id === r.owner_id)?.full_name || "—"}</TableCell>
-                    <TableCell onClick={(e) => e.stopPropagation()} className="flex gap-1">
-                      {canEdit && <Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>}
-                      {canDelete && <Button variant="ghost" size="icon" onClick={() => setDeleteId(r.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>}
-                    </TableCell>
-                  </TableRow>
-                  {expandedId === r.id && (
-                    <TableRow key={`${r.id}-detail`}>
-                      <TableCell colSpan={10}>
-                        <div className="p-4 bg-muted/30 rounded-md grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                          <div><strong>Description:</strong> {r.description || "—"}</div>
-                          <div><strong>Linked Priority:</strong> {priorities.find((p) => p.id === r.priority_id)?.title || "—"}</div>
-                          <div><strong>Sprint:</strong> {sprints.find((s) => s.id === r.sprint_id)?.name || "—"}</div>
-                          <div><strong>Due Date:</strong> {r.due_date || "—"}</div>
-                          <div><strong>Est. Cost:</strong> {r.estimated_cost ? `$${Number(r.estimated_cost).toLocaleString()}` : "—"}</div>
-                          <div><strong>Est. Annual Savings:</strong> {r.estimated_annual_savings ? `$${Number(r.estimated_annual_savings).toLocaleString()}` : "—"}</div>
-                          <div><strong>Est. CO₂ Reduction:</strong> {r.estimated_co2_reduction ? `${r.estimated_co2_reduction} tCO₂e` : "—"}</div>
-                          <div><strong>Notes:</strong> {r.notes || "—"}</div>
-                        </div>
+          {viewMode === "chart" && <WSJFScatterChart data={interventions} />}
+          {viewMode === "bulk" && <BulkScoreTable interventions={interventions} onScoreChange={handleScoreChange} />}
+          {viewMode === "table" && (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12">Rank</TableHead>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Business ROI</TableHead>
+                  <TableHead>Planet Impact</TableHead>
+                  <TableHead>People Impact</TableHead>
+                  <TableHead>Time to Deploy</TableHead>
+                  <TableHead>WSJF Score</TableHead>
+                  <TableHead className="w-28">Score Bar</TableHead>
+                  <TableHead>Stage</TableHead>
+                  <TableHead>Owner</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sorted.map((r, i) => (
+                  <>
+                    <TableRow key={r.id} className="cursor-pointer" onClick={() => setExpandedId(expandedId === r.id ? null : r.id)}>
+                      <TableCell className="font-bold text-primary">{i + 1}</TableCell>
+                      <TableCell className="font-medium flex items-center gap-1">
+                        {r.title}
+                        {expandedId === r.id ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                      </TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <Select value={String(r.business_roi || 1)} onValueChange={(v) => handleScoreChange(r.id, "business_roi", v)}>
+                          <SelectTrigger className="w-16 h-8"><SelectValue /></SelectTrigger>
+                          <SelectContent>{FIBONACCI.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <Select value={String(r.planet_impact || 1)} onValueChange={(v) => handleScoreChange(r.id, "planet_impact", v)}>
+                          <SelectTrigger className="w-16 h-8"><SelectValue /></SelectTrigger>
+                          <SelectContent>{FIBONACCI.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <Select value={String(r.people_impact || 1)} onValueChange={(v) => handleScoreChange(r.id, "people_impact", v)}>
+                          <SelectTrigger className="w-16 h-8"><SelectValue /></SelectTrigger>
+                          <SelectContent>{FIBONACCI.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <Select value={String(r.time_to_deploy || 1)} onValueChange={(v) => handleScoreChange(r.id, "time_to_deploy", v)}>
+                          <SelectTrigger className="w-16 h-8"><SelectValue /></SelectTrigger>
+                          <SelectContent>{FIBONACCI.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className="bg-primary text-primary-foreground">{calcWSJF(r).toFixed(2)}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <ScoreBar score={calcWSJF(r)} maxScore={maxWSJF} />
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={stageBadgeColors[r.stage] || "bg-muted"}>{r.stage?.replace("_", " ") || "—"}</Badge>
+                      </TableCell>
+                      <TableCell>{profiles.find((p) => p.id === r.owner_id)?.full_name || "—"}</TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()} className="flex gap-1">
+                        {canEdit && <Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>}
+                        {canDelete && <Button variant="ghost" size="icon" onClick={() => setDeleteId(r.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>}
                       </TableCell>
                     </TableRow>
-                  )}
-                </>
-              ))}
-            </TableBody>
-          </Table>
+                    {expandedId === r.id && (
+                      <TableRow key={`${r.id}-detail`}>
+                        <TableCell colSpan={11}>
+                          <div className="p-4 bg-muted/30 rounded-md space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                              <div><strong>Description:</strong> {r.description || "—"}</div>
+                              <div><strong>Linked Priority:</strong> {priorities.find((p) => p.id === r.priority_id)?.title || "—"}</div>
+                              <div><strong>Sprint:</strong> {sprints.find((s) => s.id === r.sprint_id)?.name || "—"}</div>
+                              <div><strong>Due Date:</strong> {r.due_date || "—"}</div>
+                              <div><strong>Est. Cost:</strong> {r.estimated_cost ? `$${Number(r.estimated_cost).toLocaleString()}` : "—"}</div>
+                              <div><strong>Est. Annual Savings:</strong> {r.estimated_annual_savings ? `$${Number(r.estimated_annual_savings).toLocaleString()}` : "—"}</div>
+                              <div><strong>Est. CO₂ Reduction:</strong> {r.estimated_co2_reduction ? `${r.estimated_co2_reduction} tCO₂e` : "—"}</div>
+                              <div><strong>Notes:</strong> {r.notes || "—"}</div>
+                            </div>
+                            {clientId && <LinkedAssets interventionId={r.id} clientId={clientId} canEdit={canEdit} />}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
 
