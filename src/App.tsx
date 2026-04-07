@@ -9,6 +9,7 @@ import XMatrix from "./pages/XMatrix";
 import WSJFScoring from "./pages/WSJFScoring";
 import KanbanBoard from "./pages/KanbanBoard";
 import Portfolio from "./pages/Portfolio";
+import Settings from "./pages/Settings";
 import AppLayout from "./components/AppLayout";
 import NotFound from "./pages/NotFound";
 
@@ -37,6 +38,7 @@ const AuthenticatedApp = () => {
         <Route path="/wsjf" element={<WSJFScoring />} />
         <Route path="/kanban" element={<KanbanBoard />} />
         <Route path="/portfolio" element={<Portfolio />} />
+        <Route path="/settings" element={<Settings />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AppLayout>
