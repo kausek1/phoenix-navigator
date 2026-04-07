@@ -13,7 +13,15 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const AuthenticatedApp = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="h-8 w-8 rounded-lg gradient-phoenix animate-pulse" />
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return <LoginPage />;
