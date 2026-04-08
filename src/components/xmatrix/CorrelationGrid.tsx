@@ -66,9 +66,11 @@ const CorrelationGrid = ({ data, canEdit, clientId }: CorrelationGridProps) => {
   const [layerB, setLayerB] = useState("objectives");
   const [correlations, setCorrelations] = useState<any[]>([]);
 
+  const isReversed = !CORR_TABLE_MAP[`${layerA}-${layerB}`] && !!CORR_TABLE_MAP[`${layerB}-${layerA}`];
   const tableName = CORR_TABLE_MAP[`${layerA}-${layerB}`] || CORR_TABLE_MAP[`${layerB}-${layerA}`];
-  const colA = getColKey(layerA);
-  const colB = getColKey(layerB);
+  // When reversed, the table columns are named for layerB-layerA order
+  const colA = isReversed ? getColKey(layerB) : getColKey(layerA);
+  const colB = isReversed ? getColKey(layerA) : getColKey(layerB);
 
   const fetchCorrelations = useCallback(async () => {
     if (!tableName || !clientId) return;
@@ -78,23 +80,31 @@ const CorrelationGrid = ({ data, canEdit, clientId }: CorrelationGridProps) => {
 
   useEffect(() => { fetchCorrelations(); }, [fetchCorrelations]);
 
-  const getStrength = (aId: string, bId: string): Strength => {
-    const c = correlations.find((cr: any) => cr[colA] === aId && cr[colB] === bId);
+  const getStrength = (rowId: string, colId: string): Strength => {
+    const aVal = isReversed ? colId : rowId;
+    const bVal = isReversed ? rowId : colId;
+    const c = correlations.find((cr: any) => cr[colA] === aVal && cr[colB] === bVal);
     return (c?.strength as Strength) || "none";
   };
 
-  const handleCellClick = async (aId: string, bId: string) => {
+  const handleCellClick = async (rowId: string, colId: string) => {
     if (!canEdit || !tableName) return;
-    const current = getStrength(aId, bId);
+    const aVal = isReversed ? colId : rowId;
+    const bVal = isReversed ? rowId : colId;
+    const current = getStrength(rowId, colId);
     const next = nextStrength(current);
-    const existing = correlations.find((cr: any) => cr[colA] === aId && cr[colB] === bId);
+    const existing = correlations.find((cr: any) => cr[colA] === aVal && cr[colB] === bVal);
 
+    let result;
     if (next === "none" && existing) {
-      await supabase.from(tableName).delete().eq("id", existing.id);
+      result = await supabase.from(tableName).delete().eq("id", existing.id);
     } else if (existing) {
-      await supabase.from(tableName).update({ strength: next }).eq("id", existing.id);
+      result = await supabase.from(tableName).update({ strength: next }).eq("id", existing.id);
     } else if (next !== "none") {
-      await supabase.from(tableName).insert({ [colA]: aId, [colB]: bId, strength: next });
+      result = await supabase.from(tableName).insert({ [colA]: aVal, [colB]: bVal, strength: next });
+    }
+    if (result?.error) {
+      console.error("Correlation update failed:", result.error);
     }
     fetchCorrelations();
   };
