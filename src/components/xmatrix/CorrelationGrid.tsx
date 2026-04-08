@@ -66,9 +66,12 @@ const CorrelationGrid = ({ data, canEdit, clientId }: CorrelationGridProps) => {
   const [layerB, setLayerB] = useState("objectives");
   const [correlations, setCorrelations] = useState<any[]>([]);
 
+  const isReversed = !CORR_TABLE_MAP[`${layerA}-${layerB}`] && !!CORR_TABLE_MAP[`${layerB}-${layerA}`];
   const tableName = CORR_TABLE_MAP[`${layerA}-${layerB}`] || CORR_TABLE_MAP[`${layerB}-${layerA}`];
-  const colA = getColKey(layerA);
-  const colB = getColKey(layerB);
+  const colA = isReversed ? getColKey(layerB) : getColKey(layerA);
+  const colB = isReversed ? getColKey(layerA) : getColKey(layerB);
+  const mapRowId = (aId: string) => isReversed ? undefined : aId;
+  const mapColId = (bId: string) => isReversed ? undefined : bId;
 
   const fetchCorrelations = useCallback(async () => {
     if (!tableName || !clientId) return;
