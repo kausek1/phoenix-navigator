@@ -95,16 +95,16 @@ const CorrelationGrid = ({ data, canEdit, clientId }: CorrelationGridProps) => {
     const next = nextStrength(current);
     const existing = correlations.find((cr: any) => cr[colA] === aVal && cr[colB] === bVal);
 
-    try {
-      if (next === "none" && existing) {
-        await supabase.from(tableName).delete().eq("id", existing.id);
-      } else if (existing) {
-        await supabase.from(tableName).update({ strength: next }).eq("id", existing.id);
-      } else if (next !== "none") {
-        await supabase.from(tableName).insert({ [colA]: aVal, [colB]: bVal, strength: next });
-      }
-    } catch (e) {
-      console.error("Correlation update failed:", e);
+    let result;
+    if (next === "none" && existing) {
+      result = await supabase.from(tableName).delete().eq("id", existing.id);
+    } else if (existing) {
+      result = await supabase.from(tableName).update({ strength: next }).eq("id", existing.id);
+    } else if (next !== "none") {
+      result = await supabase.from(tableName).insert({ [colA]: aVal, [colB]: bVal, strength: next });
+    }
+    if (result?.error) {
+      console.error("Correlation update failed:", result.error);
     }
     fetchCorrelations();
   };
