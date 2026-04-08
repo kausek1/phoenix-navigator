@@ -80,23 +80,31 @@ const CorrelationGrid = ({ data, canEdit, clientId }: CorrelationGridProps) => {
 
   useEffect(() => { fetchCorrelations(); }, [fetchCorrelations]);
 
-  const getStrength = (aId: string, bId: string): Strength => {
-    const c = correlations.find((cr: any) => cr[colA] === aId && cr[colB] === bId);
+  const getStrength = (rowId: string, colId: string): Strength => {
+    const aVal = isReversed ? colId : rowId;
+    const bVal = isReversed ? rowId : colId;
+    const c = correlations.find((cr: any) => cr[colA] === aVal && cr[colB] === bVal);
     return (c?.strength as Strength) || "none";
   };
 
-  const handleCellClick = async (aId: string, bId: string) => {
+  const handleCellClick = async (rowId: string, colId: string) => {
     if (!canEdit || !tableName) return;
-    const current = getStrength(aId, bId);
+    const aVal = isReversed ? colId : rowId;
+    const bVal = isReversed ? rowId : colId;
+    const current = getStrength(rowId, colId);
     const next = nextStrength(current);
-    const existing = correlations.find((cr: any) => cr[colA] === aId && cr[colB] === bId);
+    const existing = correlations.find((cr: any) => cr[colA] === aVal && cr[colB] === bVal);
 
-    if (next === "none" && existing) {
-      await supabase.from(tableName).delete().eq("id", existing.id);
-    } else if (existing) {
-      await supabase.from(tableName).update({ strength: next }).eq("id", existing.id);
-    } else if (next !== "none") {
-      await supabase.from(tableName).insert({ [colA]: aId, [colB]: bId, strength: next });
+    try {
+      if (next === "none" && existing) {
+        await supabase.from(tableName).delete().eq("id", existing.id);
+      } else if (existing) {
+        await supabase.from(tableName).update({ strength: next }).eq("id", existing.id);
+      } else if (next !== "none") {
+        await supabase.from(tableName).insert({ [colA]: aVal, [colB]: bVal, strength: next });
+      }
+    } catch (e) {
+      console.error("Correlation update failed:", e);
     }
     fetchCorrelations();
   };
