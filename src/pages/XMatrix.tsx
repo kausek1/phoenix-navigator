@@ -52,14 +52,16 @@ const XMatrix = () => {
     const { data: priorities } = await supabase
       .from("xmatrix_improvement_priorities")
       .select("*, owner:profiles(id, full_name)")
-      .eq("client_id", clientId);
+      .eq("client_id", clientId)
+      .order("sort_order");
     results.priorities = priorities || [];
 
     // Fetch KPIs with owner join
     const { data: kpis } = await supabase
       .from("xmatrix_kpis")
       .select("*, owner:profiles(id, full_name)")
-      .eq("client_id", clientId);
+      .eq("client_id", clientId)
+      .order("sort_order");
     results.kpis = kpis || [];
 
     const { data: p } = await supabase.from("profiles").select("id, full_name, role, email").eq("client_id", clientId);
@@ -125,9 +127,12 @@ const XMatrix = () => {
       <>
         <div><Label>Title</Label><Input value={form.title || ""} onChange={(e) => updateForm("title", e.target.value)} /></div>
         <div><Label>Owner</Label>
-          <Select value={form.owner_id || ""} onValueChange={(v) => updateForm("owner_id", v)}>
+          <Select value={form.owner_id || "__unassigned__"} onValueChange={(v) => updateForm("owner_id", v === "__unassigned__" ? null : v)}>
             <SelectTrigger><SelectValue placeholder="Select owner" /></SelectTrigger>
-            <SelectContent>{profiles.map((p) => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}</SelectContent>
+            <SelectContent>
+              <SelectItem value="__unassigned__">Unassigned</SelectItem>
+              {profiles.map((p) => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}
+            </SelectContent>
           </Select>
         </div>
         <div><Label>Status</Label>
@@ -145,9 +150,12 @@ const XMatrix = () => {
         <div><Label>Target Value</Label><Input type="number" value={form.target_value || ""} onChange={(e) => updateForm("target_value", parseFloat(e.target.value))} /></div>
         <div><Label>Current Value</Label><Input type="number" value={form.current_value || ""} onChange={(e) => updateForm("current_value", parseFloat(e.target.value))} /></div>
         <div><Label>Owner</Label>
-          <Select value={form.owner_id || ""} onValueChange={(v) => updateForm("owner_id", v)}>
+          <Select value={form.owner_id || "__unassigned__"} onValueChange={(v) => updateForm("owner_id", v === "__unassigned__" ? null : v)}>
             <SelectTrigger><SelectValue placeholder="Select owner" /></SelectTrigger>
-            <SelectContent>{profiles.map((p) => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}</SelectContent>
+            <SelectContent>
+              <SelectItem value="__unassigned__">Unassigned</SelectItem>
+              {profiles.map((p) => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}
+            </SelectContent>
           </Select>
         </div>
       </>
