@@ -70,10 +70,13 @@ const XMatrix = () => {
 
   const resolveOwnerName = (ownerId: string | null) => {
     if (!ownerId) return "Unassigned";
-    const owner = (data.owners || []).find((o: any) => o.id === ownerId);
+    const owners = data.owners || [];
+    const owner = owners.find((o: any) => o.id === ownerId);
     if (owner) return owner.name;
     const profile = profiles.find((p: any) => p.id === ownerId);
-    return profile?.full_name || "Unassigned";
+    if (profile) return profile.full_name;
+    console.warn("Could not resolve owner_id:", ownerId, "Available owner IDs:", owners.map((o: any) => o.id), "Available profile IDs:", profiles.map((p: any) => p.id));
+    return "Unassigned";
   };
 
   useEffect(() => { fetchData(); }, [fetchData]);
