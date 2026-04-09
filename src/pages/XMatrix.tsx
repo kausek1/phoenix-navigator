@@ -83,7 +83,7 @@ const XMatrix = () => {
   const handleSave = async () => {
     const table = tableMap[tab];
     const payload = { ...form };
-    if (!payload.owner_id) payload.owner_id = null;
+    if (payload.owner_id === "__unassigned__" || !payload.owner_id) payload.owner_id = null;
     if (editItem) {
       await supabase.from(table).update(payload).eq("id", editItem.id);
     } else {
