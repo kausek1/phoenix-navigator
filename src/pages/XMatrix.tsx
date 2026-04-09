@@ -70,10 +70,13 @@ const XMatrix = () => {
 
   const resolveOwnerName = (ownerId: string | null) => {
     if (!ownerId) return "Unassigned";
-    const owner = (data.owners || []).find((o: any) => o.id === ownerId);
+    const owners = data.owners || [];
+    const owner = owners.find((o: any) => o.id === ownerId);
     if (owner) return owner.name;
     const profile = profiles.find((p: any) => p.id === ownerId);
-    return profile?.full_name || "Unassigned";
+    if (profile) return profile.full_name;
+    console.warn("Could not resolve owner_id:", ownerId, "Available owner IDs:", owners.map((o: any) => o.id), "Available profile IDs:", profiles.map((p: any) => p.id));
+    return "Unassigned";
   };
 
   useEffect(() => { fetchData(); }, [fetchData]);
@@ -87,10 +90,20 @@ const XMatrix = () => {
     const payload = { ...form };
     // Remove joined owner object before saving
     delete payload.owner;
+    // Remove __unassigned__ sentinel — store null instead
+    if (payload.owner_id === "__unassigned__") payload.owner_id = null;
+    
+    console.log("Saving to", table, "payload:", JSON.stringify(payload));
+    let result;
     if (editItem) {
-      await supabase.from(table).update(payload).eq("id", editItem.id);
+      result = await supabase.from(table).update(payload).eq("id", editItem.id);
     } else {
-      await supabase.from(table).insert({ ...payload, client_id: clientId });
+      result = await supabase.from(table).insert({ ...payload, client_id: clientId });
+    }
+    if (result.error) {
+      console.error("Save failed:", result.error);
+    } else {
+      console.log("Save succeeded");
     }
     setSlideOpen(false);
     fetchData();
