@@ -68,15 +68,10 @@ const XMatrix = () => {
     setData(results);
   }, [clientId]);
 
-  const resolveOwnerName = (ownerId: string | null) => {
+  const getOwnerName = (ownerId: string | null) => {
     if (!ownerId) return "Unassigned";
-    const owners = data.owners || [];
-    const owner = owners.find((o: any) => o.id === ownerId);
-    if (owner) return owner.name;
     const profile = profiles.find((p: any) => p.id === ownerId);
-    if (profile) return profile.full_name;
-    console.warn("Could not resolve owner_id:", ownerId, "Available owner IDs:", owners.map((o: any) => o.id), "Available profile IDs:", profiles.map((p: any) => p.id));
-    return "Unassigned";
+    return profile?.full_name || "Unassigned";
   };
 
   useEffect(() => { fetchData(); }, [fetchData]);
@@ -88,22 +83,11 @@ const XMatrix = () => {
   const handleSave = async () => {
     const table = tableMap[tab];
     const payload = { ...form };
-    // Remove joined owner object before saving
-    delete payload.owner;
-    // Remove __unassigned__ sentinel — store null instead
-    if (payload.owner_id === "__unassigned__") payload.owner_id = null;
-    
-    console.log("Saving to", table, "payload:", JSON.stringify(payload));
-    let result;
+    if (!payload.owner_id) payload.owner_id = null;
     if (editItem) {
-      result = await supabase.from(table).update(payload).eq("id", editItem.id);
+      await supabase.from(table).update(payload).eq("id", editItem.id);
     } else {
-      result = await supabase.from(table).insert({ ...payload, client_id: clientId });
-    }
-    if (result.error) {
-      console.error("Save failed:", result.error);
-    } else {
-      console.log("Save succeeded");
+      await supabase.from(table).insert({ ...payload, client_id: clientId });
     }
     setSlideOpen(false);
     fetchData();
@@ -147,11 +131,11 @@ const XMatrix = () => {
       <>
         <div><Label>Title</Label><Input value={form.title || ""} onChange={(e) => updateForm("title", e.target.value)} /></div>
         <div><Label>Owner</Label>
-          <Select value={form.owner_id || "__unassigned__"} onValueChange={(v) => updateForm("owner_id", v === "__unassigned__" ? null : v)}>
-            <SelectTrigger><SelectValue placeholder="Select owner" /></SelectTrigger>
+          <Select value={form.owner_id || ""} onValueChange={(v) => updateForm("owner_id", v || null)}>
+            <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="__unassigned__">Unassigned</SelectItem>
-              {(data.owners || []).map((o: any) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
+              <SelectItem value="">Unassigned</SelectItem>
+              {profiles.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -170,11 +154,11 @@ const XMatrix = () => {
         <div><Label>Target Value</Label><Input type="number" value={form.target_value || ""} onChange={(e) => updateForm("target_value", parseFloat(e.target.value))} /></div>
         <div><Label>Current Value</Label><Input type="number" value={form.current_value || ""} onChange={(e) => updateForm("current_value", parseFloat(e.target.value))} /></div>
         <div><Label>Owner</Label>
-          <Select value={form.owner_id || "__unassigned__"} onValueChange={(v) => updateForm("owner_id", v === "__unassigned__" ? null : v)}>
-            <SelectTrigger><SelectValue placeholder="Select owner" /></SelectTrigger>
+          <Select value={form.owner_id || ""} onValueChange={(v) => updateForm("owner_id", v || null)}>
+            <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="__unassigned__">Unassigned</SelectItem>
-              {(data.owners || []).map((o: any) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
+              <SelectItem value="">Unassigned</SelectItem>
+              {profiles.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -229,7 +213,7 @@ const XMatrix = () => {
           {items.map((r) => (
             <TableRow key={r.id}>
               <TableCell className="font-medium">{r.title}</TableCell>
-              <TableCell>{resolveOwnerName(r.owner_id)}</TableCell>
+              <TableCell>{getOwnerName(r.owner_id)}</TableCell>
               <TableCell><Badge variant="secondary">{r.status}</Badge></TableCell>
               <TableCell className="flex gap-1">
                 {canEdit && <Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>}
@@ -250,7 +234,7 @@ const XMatrix = () => {
               <TableCell>{r.unit}</TableCell>
               <TableCell>{r.target_value}</TableCell>
               <TableCell>{r.current_value}</TableCell>
-              <TableCell>{resolveOwnerName(r.owner_id)}</TableCell>
+              <TableCell>{getOwnerName(r.owner_id)}</TableCell>
               <TableCell className="flex gap-1">
                 {canEdit && <Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>}
                 {canDelete && <Button variant="ghost" size="icon" onClick={() => setDeleteId(r.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>}
