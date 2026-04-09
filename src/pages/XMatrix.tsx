@@ -68,10 +68,12 @@ const XMatrix = () => {
     setData(results);
   }, [clientId]);
 
+  const getProfileLabel = (profile: any) => profile?.full_name?.trim() || profile?.email?.trim() || "Unnamed user";
+
   const getOwnerName = (ownerId: string | null) => {
     if (!ownerId) return "Unassigned";
     const profile = profiles.find((p: any) => p.id === ownerId);
-    return profile?.full_name || "Unassigned";
+    return profile ? getProfileLabel(profile) : "Unassigned";
   };
 
   useEffect(() => { fetchData(); }, [fetchData]);
@@ -135,7 +137,7 @@ const XMatrix = () => {
             <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="__unassigned__">Unassigned</SelectItem>
-              {profiles.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}
+              {profiles.map((p: any) => <SelectItem key={p.id} value={p.id}>{getProfileLabel(p)}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -158,7 +160,7 @@ const XMatrix = () => {
             <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="__unassigned__">Unassigned</SelectItem>
-              {profiles.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}
+              {profiles.map((p: any) => <SelectItem key={p.id} value={p.id}>{getProfileLabel(p)}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
