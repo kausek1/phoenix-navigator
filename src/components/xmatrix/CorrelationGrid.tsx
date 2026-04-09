@@ -105,7 +105,7 @@ const CorrelationGrid = ({ data, canEdit, clientId }: CorrelationGridProps) => {
     } else if (existing) {
       result = await supabase.from(tableName).update({ strength: next }).eq("id", existing.id);
     } else if (next !== "none") {
-      result = await supabase.from(tableName).insert({ [colA]: aVal, [colB]: bVal, strength: next });
+      result = await supabase.from(tableName).insert({ [colA]: aVal, [colB]: bVal, strength: next, client_id: clientId });
     }
     if (result?.error) {
       console.error("Correlation update failed:", result.error);
