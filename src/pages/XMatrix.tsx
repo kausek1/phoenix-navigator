@@ -98,20 +98,10 @@ const XMatrix = () => {
       }
     }
     
-    console.log("PHOENIX SAVE DEBUG - tab:", tab);
-    console.log("PHOENIX SAVE DEBUG - payload:", JSON.stringify(payload));
-    
-    let result;
     if (editItem) {
-      result = await supabase.from(table).update(payload).eq("id", editItem.id);
+      await supabase.from(table).update(payload).eq("id", editItem.id);
     } else {
-      result = await supabase.from(table).insert({ ...payload, client_id: clientId });
-    }
-    
-    console.log("PHOENIX SAVE DEBUG - result:", JSON.stringify(result));
-    
-    if (result.error) {
-      console.error("PHOENIX SAVE ERROR:", result.error);
+      await supabase.from(table).insert({ ...payload, client_id: clientId });
     }
     
     setSlideOpen(false);
