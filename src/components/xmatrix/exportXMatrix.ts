@@ -40,12 +40,28 @@ export const exportXMatrix = async ({ data, clientName, clientId }: ExportParams
   row = writeSection("Annual Objectives", data.objectives, row, "title");
   row = writeSection("Improvement Priorities", data.priorities, row, "title");
   row = writeSection("KPIs", data.kpis, row, "name");
+  row = writeSection("Owners", data.owners || [], row, "name");
 
-  // Fetch all correlations for export
+  // All 6 correlation pairs
   const corrPairs = [
-    { key: "goals-objectives", rowData: data.goals, colData: data.objectives, rowKey: "goal_id", colKey: "objective_id", label: "Goals → Objectives" },
-    { key: "objectives-priorities", rowData: data.objectives, colData: data.priorities, rowKey: "objective_id", colKey: "priority_id", label: "Objectives → Priorities" },
-    { key: "priorities-kpis", rowData: data.priorities, colData: data.kpis, rowKey: "priority_id", colKey: "kpi_id", label: "Priorities → KPIs" },
+    { key: "goals-objectives", rowData: data.goals, colData: data.objectives,
+      rowKey: "goal_id", colKey: "objective_id",
+      label: "Goals → Objectives" },
+    { key: "objectives-priorities", rowData: data.objectives, colData: data.priorities,
+      rowKey: "objective_id", colKey: "priority_id",
+      label: "Objectives → Priorities" },
+    { key: "priorities-kpis", rowData: data.priorities, colData: data.kpis,
+      rowKey: "priority_id", colKey: "kpi_id",
+      label: "Priorities → KPIs" },
+    { key: "kpis-owners", rowData: data.kpis, colData: data.owners || [],
+      rowKey: "kpi_id", colKey: "owner_id",
+      label: "KPIs → Owners" },
+    { key: "goals-priorities", rowData: data.goals, colData: data.priorities,
+      rowKey: "goal_id", colKey: "priority_id",
+      label: "Goals → Priorities (diagonal)" },
+    { key: "objectives-kpis", rowData: data.objectives, colData: data.kpis,
+      rowKey: "objective_id", colKey: "kpi_id",
+      label: "Objectives → KPIs (diagonal)" },
   ];
 
   for (const pair of corrPairs) {
@@ -101,7 +117,6 @@ export const exportXMatrix = async ({ data, clientName, clientId }: ExportParams
     });
     col.width = Math.min(maxLen + 2, 40);
   });
-  // First column wider for labels
   ws.getColumn(1).width = 30;
 
   const buf = await wb.xlsx.writeBuffer();
