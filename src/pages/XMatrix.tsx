@@ -41,10 +41,27 @@ const XMatrix = () => {
   const fetchData = useCallback(async () => {
     if (!clientId) return;
     const results: Record<string, any[]> = {};
-    for (const [key, table] of Object.entries(tableMap)) {
-      const { data: rows } = await supabase.from(table).select("*").eq("client_id", clientId);
+
+    // Fetch goals, objectives, owners with simple select
+    for (const key of ["goals", "objectives", "owners"]) {
+      const { data: rows } = await supabase.from(tableMap[key]).select("*").eq("client_id", clientId);
       results[key] = rows || [];
     }
+
+    // Fetch priorities with owner join
+    const { data: priorities } = await supabase
+      .from("xmatrix_improvement_priorities")
+      .select("*, owner:profiles(id, full_name)")
+      .eq("client_id", clientId);
+    results.priorities = priorities || [];
+
+    // Fetch KPIs with owner join
+    const { data: kpis } = await supabase
+      .from("xmatrix_kpis")
+      .select("*, owner:profiles(id, full_name)")
+      .eq("client_id", clientId);
+    results.kpis = kpis || [];
+
     const { data: p } = await supabase.from("profiles").select("id, full_name, role, email").eq("client_id", clientId);
     setProfiles(p || []);
     setData(results);
@@ -58,10 +75,13 @@ const XMatrix = () => {
 
   const handleSave = async () => {
     const table = tableMap[tab];
+    const payload = { ...form };
+    // Remove joined owner object before saving
+    delete payload.owner;
     if (editItem) {
-      await supabase.from(table).update(form).eq("id", editItem.id);
+      await supabase.from(table).update(payload).eq("id", editItem.id);
     } else {
-      await supabase.from(table).insert({ ...form, client_id: clientId });
+      await supabase.from(table).insert({ ...payload, client_id: clientId });
     }
     setSlideOpen(false);
     fetchData();
@@ -181,7 +201,7 @@ const XMatrix = () => {
           {items.map((r) => (
             <TableRow key={r.id}>
               <TableCell className="font-medium">{r.title}</TableCell>
-              <TableCell>{profiles.find((p) => p.id === r.owner_id)?.full_name || "—"}</TableCell>
+              <TableCell>{r.owner?.full_name || "Unassigned"}</TableCell>
               <TableCell><Badge variant="secondary">{r.status}</Badge></TableCell>
               <TableCell className="flex gap-1">
                 {canEdit && <Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>}
@@ -202,7 +222,7 @@ const XMatrix = () => {
               <TableCell>{r.unit}</TableCell>
               <TableCell>{r.target_value}</TableCell>
               <TableCell>{r.current_value}</TableCell>
-              <TableCell>{profiles.find((p) => p.id === r.owner_id)?.full_name || "—"}</TableCell>
+              <TableCell>{r.owner?.full_name || "Unassigned"}</TableCell>
               <TableCell className="flex gap-1">
                 {canEdit && <Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>}
                 {canDelete && <Button variant="ghost" size="icon" onClick={() => setDeleteId(r.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>}

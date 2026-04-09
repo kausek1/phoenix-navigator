@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { User, Search } from "lucide-react";
@@ -19,6 +19,7 @@ interface OwnerFormProps {
 const OwnerForm = ({ form, updateForm, profiles }: OwnerFormProps) => {
   const [search, setSearch] = useState("");
   const [showResults, setShowResults] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   const filtered = profiles.filter(
     (p) =>
@@ -41,9 +42,19 @@ const OwnerForm = ({ form, updateForm, profiles }: OwnerFormProps) => {
     }
   }, [form.profile_id, profiles]);
 
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setShowResults(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
   return (
     <>
-      <div className="relative">
+      <div className="relative" ref={wrapperRef}>
         <Label>Search existing users</Label>
         <div className="relative">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />

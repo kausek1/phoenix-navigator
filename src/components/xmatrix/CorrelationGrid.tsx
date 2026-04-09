@@ -40,18 +40,23 @@ const LAYER_OPTIONS = [
   { value: "objectives", label: "Annual Objectives" },
   { value: "priorities", label: "Improvement Priorities" },
   { value: "kpis", label: "KPIs" },
+  { value: "owners", label: "Owners" },
 ];
 
 const CORR_TABLE_MAP: Record<string, string> = {
-  "goals-objectives": "xmatrix_goal_objective_links",
-  "objectives-priorities": "xmatrix_objective_priority_links",
-  "priorities-kpis": "xmatrix_priority_kpi_links",
+  "goals-objectives": "xmatrix_goal_objective_correlations",
+  "objectives-priorities": "xmatrix_objective_priority_correlations",
+  "priorities-kpis": "xmatrix_priority_kpi_correlations",
+  "kpis-owners": "xmatrix_kpi_owner_correlations",
+  "goals-priorities": "xmatrix_goal_priority_correlations",
+  "objectives-kpis": "xmatrix_objective_kpi_correlations",
 };
 
 const getColKey = (layer: string) => {
   if (layer === "goals") return "goal_id";
   if (layer === "objectives") return "objective_id";
   if (layer === "priorities") return "priority_id";
+  if (layer === "owners") return "owner_id";
   return "kpi_id";
 };
 
@@ -68,7 +73,6 @@ const CorrelationGrid = ({ data, canEdit, clientId }: CorrelationGridProps) => {
 
   const isReversed = !CORR_TABLE_MAP[`${layerA}-${layerB}`] && !!CORR_TABLE_MAP[`${layerB}-${layerA}`];
   const tableName = CORR_TABLE_MAP[`${layerA}-${layerB}`] || CORR_TABLE_MAP[`${layerB}-${layerA}`];
-  // When reversed, the table columns are named for layerB-layerA order
   const colA = isReversed ? getColKey(layerB) : getColKey(layerA);
   const colB = isReversed ? getColKey(layerA) : getColKey(layerB);
 
@@ -136,7 +140,7 @@ const CorrelationGrid = ({ data, canEdit, clientId }: CorrelationGridProps) => {
         </div>
 
         {!tableName ? (
-          <p className="text-sm text-muted-foreground">No correlation table exists for this layer combination. Supported: Goals↔Objectives, Objectives↔Priorities, Priorities↔KPIs.</p>
+          <p className="text-sm text-muted-foreground">No correlation table exists for this layer combination.</p>
         ) : rowItems.length === 0 || colItems.length === 0 ? (
           <p className="text-sm text-muted-foreground">Add items to both layers to see the correlation grid.</p>
         ) : (
