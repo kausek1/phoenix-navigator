@@ -83,7 +83,7 @@ const XMatrix = () => {
   const handleSave = async () => {
     const table = tableMap[tab];
     const payload = { ...form };
-    if (!payload.owner_id) payload.owner_id = null;
+    if (payload.owner_id === "__unassigned__" || !payload.owner_id) payload.owner_id = null;
     if (editItem) {
       await supabase.from(table).update(payload).eq("id", editItem.id);
     } else {
@@ -131,10 +131,10 @@ const XMatrix = () => {
       <>
         <div><Label>Title</Label><Input value={form.title || ""} onChange={(e) => updateForm("title", e.target.value)} /></div>
         <div><Label>Owner</Label>
-          <Select value={form.owner_id || ""} onValueChange={(v) => updateForm("owner_id", v || null)}>
+          <Select value={form.owner_id || "__unassigned__"} onValueChange={(v) => updateForm("owner_id", v === "__unassigned__" ? null : v)}>
             <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Unassigned</SelectItem>
+              <SelectItem value="__unassigned__">Unassigned</SelectItem>
               {profiles.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}
             </SelectContent>
           </Select>
@@ -154,10 +154,10 @@ const XMatrix = () => {
         <div><Label>Target Value</Label><Input type="number" value={form.target_value || ""} onChange={(e) => updateForm("target_value", parseFloat(e.target.value))} /></div>
         <div><Label>Current Value</Label><Input type="number" value={form.current_value || ""} onChange={(e) => updateForm("current_value", parseFloat(e.target.value))} /></div>
         <div><Label>Owner</Label>
-          <Select value={form.owner_id || ""} onValueChange={(v) => updateForm("owner_id", v || null)}>
+          <Select value={form.owner_id || "__unassigned__"} onValueChange={(v) => updateForm("owner_id", v === "__unassigned__" ? null : v)}>
             <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Unassigned</SelectItem>
+              <SelectItem value="__unassigned__">Unassigned</SelectItem>
               {profiles.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}
             </SelectContent>
           </Select>
