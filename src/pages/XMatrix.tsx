@@ -48,18 +48,18 @@ const XMatrix = () => {
       results[key] = rows || [];
     }
 
-    // Fetch priorities with owner join
+    // Fetch priorities with owner join (owner_id references xmatrix_owners)
     const { data: priorities } = await supabase
       .from("xmatrix_improvement_priorities")
-      .select("*, owner:profiles(id, full_name)")
+      .select("*, owner:xmatrix_owners(id, name)")
       .eq("client_id", clientId)
       .order("sort_order");
     results.priorities = priorities || [];
 
-    // Fetch KPIs with owner join
+    // Fetch KPIs with owner join (owner_id references xmatrix_owners)
     const { data: kpis } = await supabase
       .from("xmatrix_kpis")
-      .select("*, owner:profiles(id, full_name)")
+      .select("*, owner:xmatrix_owners(id, name)")
       .eq("client_id", clientId)
       .order("sort_order");
     results.kpis = kpis || [];
@@ -131,7 +131,7 @@ const XMatrix = () => {
             <SelectTrigger><SelectValue placeholder="Select owner" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="__unassigned__">Unassigned</SelectItem>
-              {profiles.map((p) => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}
+              {(data.owners || []).map((o: any) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -154,7 +154,7 @@ const XMatrix = () => {
             <SelectTrigger><SelectValue placeholder="Select owner" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="__unassigned__">Unassigned</SelectItem>
-              {profiles.map((p) => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}
+              {(data.owners || []).map((o: any) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
