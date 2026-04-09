@@ -209,7 +209,7 @@ const XMatrix = () => {
           {items.map((r) => (
             <TableRow key={r.id}>
               <TableCell className="font-medium">{r.title}</TableCell>
-              <TableCell>{r.owner?.full_name || "Unassigned"}</TableCell>
+              <TableCell>{r.owner?.name || "Unassigned"}</TableCell>
               <TableCell><Badge variant="secondary">{r.status}</Badge></TableCell>
               <TableCell className="flex gap-1">
                 {canEdit && <Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>}
@@ -230,7 +230,7 @@ const XMatrix = () => {
               <TableCell>{r.unit}</TableCell>
               <TableCell>{r.target_value}</TableCell>
               <TableCell>{r.current_value}</TableCell>
-              <TableCell>{r.owner?.full_name || "Unassigned"}</TableCell>
+              <TableCell>{r.owner?.name || "Unassigned"}</TableCell>
               <TableCell className="flex gap-1">
                 {canEdit && <Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>}
                 {canDelete && <Button variant="ghost" size="icon" onClick={() => setDeleteId(r.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>}
