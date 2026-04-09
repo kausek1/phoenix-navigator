@@ -89,7 +89,7 @@ const XMatrix = () => {
     delete payload.created_at;
     delete payload.updated_at;
     delete payload.client_id;
-    delete payload.owner; // remove any joined relation objects
+    delete payload.owner;
     
     // Only null-coerce owner_id for tabs that have this field
     if (tab === "priorities" || tab === "kpis") {
@@ -97,14 +97,23 @@ const XMatrix = () => {
         payload.owner_id = null;
       }
     }
+    
     console.log("PHOENIX SAVE DEBUG - tab:", tab);
     console.log("PHOENIX SAVE DEBUG - payload:", JSON.stringify(payload));
     
+    let result;
     if (editItem) {
-      await supabase.from(table).update(payload).eq("id", editItem.id);
+      result = await supabase.from(table).update(payload).eq("id", editItem.id);
     } else {
-      await supabase.from(table).insert({ ...payload, client_id: clientId });
+      result = await supabase.from(table).insert({ ...payload, client_id: clientId });
     }
+    
+    console.log("PHOENIX SAVE DEBUG - result:", JSON.stringify(result));
+    
+    if (result.error) {
+      console.error("PHOENIX SAVE ERROR:", result.error);
+    }
+    
     setSlideOpen(false);
     fetchData();
   };
