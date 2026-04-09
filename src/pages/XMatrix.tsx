@@ -83,7 +83,21 @@ const XMatrix = () => {
   const handleSave = async () => {
     const table = tableMap[tab];
     const payload = { ...form };
-    if (payload.owner_id === "__unassigned__" || !payload.owner_id) payload.owner_id = null;
+    
+    // Remove fields that should not be sent to Supabase
+    delete payload.id;
+    delete payload.created_at;
+    delete payload.updated_at;
+    delete payload.client_id;
+    delete payload.owner; // remove any joined relation objects
+    
+    // Only null-coerce owner_id for tabs that have this field
+    if (tab === "priorities" || tab === "kpis") {
+      if (payload.owner_id === "__unassigned__" || !payload.owner_id) {
+        payload.owner_id = null;
+      }
+    }
+    
     if (editItem) {
       await supabase.from(table).update(payload).eq("id", editItem.id);
     } else {
