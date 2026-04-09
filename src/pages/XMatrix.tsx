@@ -97,6 +97,8 @@ const XMatrix = () => {
         payload.owner_id = null;
       }
     }
+    console.log("PHOENIX SAVE DEBUG - tab:", tab);
+    console.log("PHOENIX SAVE DEBUG - payload:", JSON.stringify(payload));
     
     if (editItem) {
       await supabase.from(table).update(payload).eq("id", editItem.id);
