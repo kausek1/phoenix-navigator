@@ -42,24 +42,23 @@ const XMatrix = () => {
     if (!clientId) return;
     const results: Record<string, any[]> = {};
 
-    // Fetch goals, objectives, owners with simple select
-    for (const key of ["goals", "objectives", "owners"]) {
+    // Fetch all entity types with simple select
+    for (const key of ["goals", "objectives", "owners"] as const) {
       const { data: rows } = await supabase.from(tableMap[key]).select("*").eq("client_id", clientId);
       results[key] = rows || [];
     }
 
-    // Fetch priorities with owner join (owner_id references xmatrix_owners)
+    // Fetch priorities and KPIs (no join — resolve owner name client-side)
     const { data: priorities } = await supabase
       .from("xmatrix_improvement_priorities")
-      .select("*, owner:xmatrix_owners(id, name)")
+      .select("*")
       .eq("client_id", clientId)
       .order("sort_order");
     results.priorities = priorities || [];
 
-    // Fetch KPIs with owner join (owner_id references xmatrix_owners)
     const { data: kpis } = await supabase
       .from("xmatrix_kpis")
-      .select("*, owner:xmatrix_owners(id, name)")
+      .select("*")
       .eq("client_id", clientId)
       .order("sort_order");
     results.kpis = kpis || [];
