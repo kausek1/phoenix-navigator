@@ -70,8 +70,8 @@ const XMatrix = () => {
 
   const getOwnerName = (ownerId: string | null) => {
     if (!ownerId) return "Unassigned";
-    const profile = profiles.find((p: any) => p.id === ownerId);
-    return profile?.full_name || "Unassigned";
+    const owner = data.owners.find((o: any) => o.id === ownerId);
+    return owner?.name || "Unassigned";
   };
 
   useEffect(() => { fetchData(); }, [fetchData]);
@@ -149,7 +149,7 @@ const XMatrix = () => {
             <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="__unassigned__">Unassigned</SelectItem>
-              {profiles.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}
+              {data.owners.map((o: any) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -172,7 +172,7 @@ const XMatrix = () => {
             <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="__unassigned__">Unassigned</SelectItem>
-              {profiles.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}
+              {data.owners.map((o: any) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
