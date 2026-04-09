@@ -42,24 +42,23 @@ const XMatrix = () => {
     if (!clientId) return;
     const results: Record<string, any[]> = {};
 
-    // Fetch goals, objectives, owners with simple select
-    for (const key of ["goals", "objectives", "owners"]) {
+    // Fetch all entity types with simple select
+    for (const key of ["goals", "objectives", "owners"] as const) {
       const { data: rows } = await supabase.from(tableMap[key]).select("*").eq("client_id", clientId);
       results[key] = rows || [];
     }
 
-    // Fetch priorities with owner join (owner_id references xmatrix_owners)
+    // Fetch priorities and KPIs (no join — resolve owner name client-side)
     const { data: priorities } = await supabase
       .from("xmatrix_improvement_priorities")
-      .select("*, owner:xmatrix_owners(id, name)")
+      .select("*")
       .eq("client_id", clientId)
       .order("sort_order");
     results.priorities = priorities || [];
 
-    // Fetch KPIs with owner join (owner_id references xmatrix_owners)
     const { data: kpis } = await supabase
       .from("xmatrix_kpis")
-      .select("*, owner:xmatrix_owners(id, name)")
+      .select("*")
       .eq("client_id", clientId)
       .order("sort_order");
     results.kpis = kpis || [];
@@ -68,6 +67,14 @@ const XMatrix = () => {
     setProfiles(p || []);
     setData(results);
   }, [clientId]);
+
+  const resolveOwnerName = (ownerId: string | null) => {
+    if (!ownerId) return "Unassigned";
+    const owner = (data.owners || []).find((o: any) => o.id === ownerId);
+    if (owner) return owner.name;
+    const profile = profiles.find((p: any) => p.id === ownerId);
+    return profile?.full_name || "Unassigned";
+  };
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -209,7 +216,7 @@ const XMatrix = () => {
           {items.map((r) => (
             <TableRow key={r.id}>
               <TableCell className="font-medium">{r.title}</TableCell>
-              <TableCell>{r.owner?.name || "Unassigned"}</TableCell>
+              <TableCell>{resolveOwnerName(r.owner_id)}</TableCell>
               <TableCell><Badge variant="secondary">{r.status}</Badge></TableCell>
               <TableCell className="flex gap-1">
                 {canEdit && <Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>}
@@ -230,7 +237,7 @@ const XMatrix = () => {
               <TableCell>{r.unit}</TableCell>
               <TableCell>{r.target_value}</TableCell>
               <TableCell>{r.current_value}</TableCell>
-              <TableCell>{r.owner?.name || "Unassigned"}</TableCell>
+              <TableCell>{resolveOwnerName(r.owner_id)}</TableCell>
               <TableCell className="flex gap-1">
                 {canEdit && <Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>}
                 {canDelete && <Button variant="ghost" size="icon" onClick={() => setDeleteId(r.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>}
